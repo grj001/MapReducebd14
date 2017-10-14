@@ -10,6 +10,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -21,7 +22,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
 import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 
-import com.zhiyou100.bd14.mr.UserVisitTimes.DesDumolicateMap;
 
 public class TotalSort {
 
@@ -50,8 +50,6 @@ public class TotalSort {
 			System.err.println(oKey.toString()+"--"+oValue.toString());
 			
 		}
-		
-		
 		
 		
 		
@@ -92,7 +90,16 @@ public class TotalSort {
 	
 	
 	
-	
+	//overWrite comparetor
+	public static class WritableDescComparetor extends IntWritable.Comparator{
+
+		@Override
+		public int compare(byte[] arg0, int arg1, int arg2, byte[] arg3, int arg4, int arg5) {
+			
+			return -super.compare(arg0, arg1, arg2, arg3, arg4, arg5);
+		}
+		
+	}
 	
 	
 	
@@ -120,7 +127,7 @@ public class TotalSort {
 		 * 需要颠倒key 和        value的值
 		 * 
 		 */
-		InputSampler.Sampler<IntWritable, Text> sampler = new InputSampler.RandomSampler(0.2, 5);
+		InputSampler.Sampler<IntWritable, Text> sampler = new InputSampler.RandomSampler(0.6, 5);
 		
 		
 		
@@ -143,12 +150,27 @@ public class TotalSort {
 		
 		//Job
 		Job job = Job.getInstance(conf);
-		job.setJarByClass(DesDumolicateMap.class);
+		job.setJarByClass(TotalSort.class);
 		job.setJobName("全排序");
 		
 		
 		
-		
+		//根本没有用到我们自己写的mapper(*****)
+		//分布式计算集群
+		//Hadoop计算集群
+		// 用分布式排序, 来测试计算集群的计算能力的
+		//计算的数据有多大, reduce的数量越多越好
+		//全排序又有一个问题
+		//想看最高用户, 忠实的用户
+		//改变默认
+		//重写比较的方法
+		//java基础, compareTo方法, 1,-1,0
+		//我们将比较返回来, 会进行排序
+		//merge这个地方进行排序
+		/*
+		 * 会调用key的compareTo方法
+		 * 重写
+		 */
 		job.setMapperClass(Mapper.class);
 		job.setReducerClass(TotalSortReduce.class);
 		
@@ -174,6 +196,16 @@ public class TotalSort {
 		
 		//设置节点个数
 		job.setNumReduceTasks(2);
+		
+		
+		
+		
+		//倒叙排序
+		/*
+		 * 指定job的sortCompareTor方法
+		 * 需要继承rowComparetor方法
+		 */
+		job.setSortComparatorClass(WritableDescComparetor.class);
 		
 		
 		
