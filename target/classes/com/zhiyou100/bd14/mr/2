@@ -1,0 +1,137 @@
+package com.zhiyou100.mr.sort;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
+import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
+
+public class TotalSort {
+	public static class TotalSortMap extends Mapper<LongWritable, Text, IntWritable, Text> {
+
+		private String[] infous;
+		private IntWritable oKay = new IntWritable();
+		private Text oValue = new Text();
+
+		@Override
+		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, IntWritable, Text>.Context context)
+				throws IOException, InterruptedException {
+			infous = value.toString().split("\\s");
+			oKay.set(Integer.valueOf(infous[1]));
+			oValue.set(infous[0]);
+
+			context.write(oKay, oValue);
+
+		}
+
+	}
+
+	public static class TotalSortReduce extends Reducer<IntWritable, Text, Text, IntWritable> {
+
+		@Override
+		protected void reduce(IntWritable key, Iterable<Text> values,
+				Reducer<IntWritable, Text, Text, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+
+			for (Text value : values) {
+
+				context.write(value, key);
+			}
+		}
+
+	}
+	// 自定义全排序
+	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+
+		// 定义抽样
+		Configuration configuration = new Configuration();
+		InputSampler.Sampler<IntWritable, Text> sampler=new InputSampler.RandomSampler(0.2, 5);
+		
+		//设置分区文件
+		FileSystem hdfileSystem=FileSystem.get(configuration);
+		
+		Path pathititionFile=new Path("/bdi4/totalsort/_partition");
+		
+		
+		//设置后，全排序的Partitioner程序就会被读取到这个文件夹
+		TotalOrderPartitioner.setPartitionFile(configuration, pathititionFile);
+		
+		
+		
+		//设置job
+		Job job =Job.getInstance(configuration);
+		job.setJarByClass(TotalSort.class);
+		job.setJobName("全排序");
+		
+		
+		//333job.setMapperClass(TotalSortMap.class);
+		job.setMapperClass(Mapper.class);
+		job.setReducerClass(TotalSortReduce.class);
+		
+		
+		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputValueClass(Text.class);
+		
+		
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+		
+		
+		
+		//把分区文件加入分布式缓存中
+		job.addCacheFile(pathititionFile.toUri());
+		
+		
+		
+		//设置分区器
+		job.setPartitionerClass(TotalOrderPartitioner.class);
+		
+		
+		
+		//设置reduce节点个数
+		job.setNumReduceTasks(2);
+		
+		Path inputPath=new Path("/abc/output/UserVisitTimes");
+		Path outputPath=new Path("/bd14/output/totalsort");
+		
+		
+		
+		
+		hdfileSystem.delete(outputPath, true);
+		
+		
+		
+		//map端的输入会把文本文件读取城kv对，按照分隔符把一行分成两部分，前面key后面value
+		//,如果分隔符不存在则整行都是key，value则为空，默认分隔符是\t
+		//手动指定分隔符参数：mapreduce.input.keyvaluelinerecordreader.key.value.separator
+		//33job.setInputFormatClass(KeyValueTextInputFormat.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		
+		
+		
+		
+		FileInputFormat.addInputPath(job, inputPath);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		
+		
+		
+		
+		
+		//将随机抽样写入分区文件
+		InputSampler.writePartitionFile(job, sampler);
+		//启动job
+		System.exit(job.waitForCompletion(true)?0:1);
+		
+	}
+}

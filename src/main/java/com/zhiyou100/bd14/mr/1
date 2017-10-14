@@ -1,0 +1,118 @@
+田银龙 11:52:37
+package com.zhiyou100.mr;
+//计算每一个用户对该系统进行登录访问（ligin）的次数
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+//import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+
+public class UserVisitTimes {
+	// 统计每一个单词的数量 把单词作为key 1 作为value 到reduce上进行累加
+	// 用户访问的次数把用户作为key把1作为value到reduce上进行累加
+	// （登陆次数的访问）
+	/*
+	 * if类型=login context.write
+	 * 
+	 */
+	public static class UserVisitTimesMap extends Mapper<LongWritable, Text, Text, IntWritable> {
+		private String[] infos;
+		private IntWritable oValue = new IntWritable(1);
+		private Text oKay = new Text();
+		
+		
+		
+		
+		@Override
+		protected void map(
+				LongWritable key,
+				Text value, 
+				Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+				
+				
+			infos = value.toString().split("\\s");
+			if (infos[1].equals("login")) {
+				oKay.set(infos[0]);
+				context.write(oKay, oValue);
+
+			}
+		}
+
+	}
+
+
+	public static class UserVisitTimesReduce extends Reducer<Text, IntWritable, IntWritable, Text> {
+		private int sum;
+		private IntWritable oValue = new IntWritable(0);
+
+		@Override
+		protected void reduce(
+				Text key, 
+				Iterable<IntWritable> values,
+				Reducer<Text, IntWritable, IntWritable, Text>.Context context)
+				throws IOException, InterruptedException {
+			sum = 0;
+			for (IntWritable value : values) {
+				sum += value.get();
+			}
+			oValue.set(sum);
+			//context.write(key, oValue);
+			context.write(oValue, key);
+
+		}
+
+		public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+			Configuration configuration = new Configuration();
+			Job job = Job.getInstance(configuration);
+			job.setJarByClass(UserVisitTimes.class);
+			
+			job.setJobName("作业:UserVisitTimes");
+			
+			job.setMapperClass(UserVisitTimesMap.class);
+			job.setReducerClass(UserVisitTimesReduce.class);
+			
+			//job.setOutputKeyClass(Text.class);
+			//job.setOutputValueClass(IntWritable.class);
+			
+			job.setMapOutputKeyClass(Text.class);
+			job.setMapOutputValueClass(IntWritable.class);
+			
+			job.setOutputKeyClass(IntWritable.class);
+			job.setOutputValueClass(Text.class);
+			
+			
+			Path inputPath =new Path("/user-logs-large.txt");
+			Path outputPath =new Path("/abc/output/UserVisitTimes");
+			
+			
+			
+			
+			
+			outputPath.getFileSystem(configuration).delete(outputPath,true);
+			
+			
+			
+			
+			//设置输出文件为sequfile
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
+			
+			FileInputFormat.addInputPath(job, inputPath);
+			FileOutputFormat.setOutputPath(job, outputPath);
+			
+			System.exit(job.waitForCompletion(true)?0:1);
+
+		}
+
+	}
+}
