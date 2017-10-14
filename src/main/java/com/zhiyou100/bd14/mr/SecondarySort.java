@@ -12,6 +12,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -123,8 +124,29 @@ public class SecondarySort {
 				oValue.set(String.valueOf(key.secondField));
 				context.write(oKey, oValue);
 			}
+			oKey.set("-----------");
+			oValue.set("-----------");
+			context.write(oKey, oValue);
+		}
+	}
+	
+	
+	
+	//groupingComparetor
+	public static class GroupToReducerComparetor extends WritableComparator{
+		//构造方法里面要向父类传递
+		public GroupToReducerComparetor() {
+			//是否实例化对象
+			super(TwoFields.class,true);
 		}
 		
+		@Override
+		public int compare(WritableComparable a, WritableComparable b) {
+			TwoFields ca = (TwoFields) a;
+			TwoFields cb = (TwoFields) b;
+			
+			return ca.getFirstField().compareTo(cb.getFirstField());
+		}
 	}
 	
 	
@@ -157,6 +179,9 @@ public class SecondarySort {
 		job.setInputFormatClass(KeyValueTextInputFormat.class);
 		
 		job.setPartitionerClass(TwoFieldsPartitioner.class);
+		
+		//分组比较器
+		job.setGroupingComparatorClass(GroupToReducerComparetor.class);
 		
 		System.exit(job.waitForCompletion(true)?0:1);
 	}
