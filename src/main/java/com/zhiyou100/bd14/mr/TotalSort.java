@@ -41,11 +41,13 @@ public class TotalSort {
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, IntWritable, Text>.Context context)
 				throws IOException, InterruptedException {
 			infos = value.toString().split("\\s");
+			
 			oKey.set(Integer.valueOf(infos[1]));
 			oValue.set(infos[0]);
 			context.write(oKey, oValue);
 			
-			System.out.println(oKey.toString()+"--"+oValue.toString());
+			
+			System.err.println(oKey.toString()+"--"+oValue.toString());
 			
 		}
 		
@@ -101,7 +103,7 @@ public class TotalSort {
 		Configuration conf = new Configuration();
 		
 		
-		
+		System.out.println("main");
 		
 		
 		
