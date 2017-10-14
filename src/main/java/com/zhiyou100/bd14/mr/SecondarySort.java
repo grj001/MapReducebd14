@@ -25,7 +25,7 @@ public class SecondarySort {
 	
 	public static class TwoFields implements WritableComparable<TwoFields>{
 		private String firstField;
-		private String secondField;
+		private Integer secondField;
 		
 		
 		public String getFirstField() {
@@ -34,26 +34,26 @@ public class SecondarySort {
 		public void setFirstField(String firstField) {
 			this.firstField = firstField;
 		}
-		public String getSecondField() {
+		public Integer getSecondField() {
 			return secondField;
 		}
-		public void setSecondField(String secondField) {
+		public void setSecondField(Integer secondField) {
 			this.secondField = secondField;
 		}
 
 		
-		//序列化
+		//序列化, 保持一致
 		@Override
 		public void write(DataOutput out) throws IOException {
-			
-			
+			out.writeUTF(firstField);
+			out.writeInt(secondField);
 		}
 
-		//反序列化
+		//反序列化, 保持一致
 		@Override
 		public void readFields(DataInput in) throws IOException {
-			
-			
+			this.firstField = in.readUTF();
+			this.secondField = in.readInt();
 		}
 
 		//比较
