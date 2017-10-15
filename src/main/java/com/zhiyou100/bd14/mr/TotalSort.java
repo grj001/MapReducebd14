@@ -24,18 +24,12 @@ import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 
 
 public class TotalSort {
-
-	
-	
-	
 	
 	
 	public static class TotalSortMap extends Mapper<LongWritable, Text, IntWritable, Text>{
 		private String[] infos;
 		private IntWritable oKey = new IntWritable(1);
 		private Text oValue = new Text();
-		
-		
 		
 		@Override
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, IntWritable, Text>.Context context)
@@ -46,29 +40,10 @@ public class TotalSort {
 			oValue.set(infos[0]);
 			context.write(oKey, oValue);
 			
-			
 			System.err.println(oKey.toString()+"--"+oValue.toString());
 			
 		}
-		
-		
-		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -88,8 +63,6 @@ public class TotalSort {
 	
 	
 	
-	
-	
 	//overWrite comparetor
 	public static class WritableDescComparetor extends IntWritable.Comparator{
 
@@ -103,14 +76,8 @@ public class TotalSort {
 	
 	
 	
-	
-	
-	
 	public static void main(String[] args) throws Exception, InterruptedException{
 		Configuration conf = new Configuration();
-		
-		
-		System.out.println("main");
 		
 		
 		
@@ -207,51 +174,16 @@ public class TotalSort {
 		 */
 		job.setSortComparatorClass(WritableDescComparetor.class);
 		
-		
-		
-		
-		
-		
 		//设置数据, 输入和删除目录
 		Path inputPath = new Path("/UserVisitTimes");
 		Path outputDir = new Path("/TotalSort");
 		
-		
-		
-		
-		
-		
-		
-		
 		hdFileSystem.delete(outputDir,true);
-		
-		
-		
-		
-		
 		
 		//map的输入会把文本文件读取成kv对,  按照分隔符把一行分成两个部分, 前面key
 		//后面value, 如果分隔符不存在, 则整行都是key  ,   value为空,	默认分隔符是\t
 		//手动指定分隔符参数: mapreduce.input.keyvaluelinerecordreader.key.value.separator
 		job.setInputFormatClass(SequenceFileInputFormat.class);
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 		
@@ -262,16 +194,8 @@ public class TotalSort {
 		
 		
 		
-		
-		
-		
-		
-		
-		
 		//将随机抽样放入分区文件
 		InputSampler.writePartitionFile(job, sampler);
-		
-		
 		
 		
 		
