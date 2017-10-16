@@ -32,7 +32,7 @@ public class IPLoginAndNewTweet {
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
 			//System.out.println(key.toString()+"--"+value.toString());
-			String[] infos = value.toString().split("\\s");
+			infos = value.toString().split("\\s");
 			//ip
 			oKey.set(infos[2]);
 			//Status
@@ -54,8 +54,9 @@ public class IPLoginAndNewTweet {
 			Integer tweetTimes = 0;
 			Integer loginTimes = 0;
 			
+			
 			for(Text value : values){
-//				System.out.println(key.toString()+"--"+value.toString());
+				//System.out.println(key.toString()+"--"+value.toString());
 				if(value.toString().equals("new_tweet")){
 					tweetTimes++;
 				}else if(value.toString().equals("login")){

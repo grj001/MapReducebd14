@@ -1,0 +1,109 @@
+学习排序和二次排序的知识整理如下.
+1. Hadoop的序列化格式介绍:Writable
+2. Hadoop的key排序逻辑
+3. 全排序
+4. 如何自定义自己的Writable类型
+5. 如何实现二次排序
+
+1. Hadoop的序列化格式介绍: Writable
+要了解和编写MR实现排序必须要知道的第一个知识点就是Writable相关的接口
+
+和类, 这些是Hadoop自己的序列化格式.
+更多的可能是要关注它的Subinterfaces: WritableComparable<T>. 他是继承
+
+Writable个Comparable<T>接口, 继而WritableComparable<T>的实现除了具有
+
+序列化特性, 更重要的是具有了比较的特性, 而比较的特性在MapReduce历时
+
+很重要的,因为MR仲有个基于建的排序过程, 所有可以作为键的类型不许具有
+
+Comparable<T>的特性.
+
+除了WritableComparable和RawComparable两个接口的区别是:
+WritableComparable和RawComparator两个接口的区别是:
+WritableComparable是需要把数据流反序列化为对象后, 然后作对象之间的比
+
+较, 二RawComparatot是直接比较数据列的数据, 不需要数据反序列化成对象, 
+
+省去了新建对象的开销,
+
+2. Hadoop的key排序逻辑
+Hadoop本身Key的数据列型的排序逻辑其实就是依赖域Hadoop本身的继承域
+
+WritableComparable<T>的基本数据类型和其他类型(相关类型可参考 )的
+
+CompareTo方法的定义.
+
+Key排序的规则:
+1. 如果调用jobconf的setOutputKeyComparatorClass()设置
+
+mapred.out.key.comparator.class
+2.否则, 使用key已经登记的comparator
+3. 否则, 是想接口WritableComparable的compareTo()函数来操作
+例如IntWritable的比较算法如下:
+
+
+public int compareTo(Object o) {
+	int thisValue = this.value;
+	int thisValue = ((IntWritable) o).value;
+	return (thisValue ? -1 : (thisValue==thisValue ? 0: 1));
+}
+
+可以修改compareTo来实现自己所需要的比较算法.
+
+虽然我们知道compareTo这个方法实现Key的排序, 但其实我们在使用Hadoop的
+
+基本数据类型时不需要关注这个排序如何实现, 因为Hadoop的框架会自动调用
+
+compareTo这个方法实现key的排序. 但是这个排序只是巨响在map或者reduce
+
+内部, 正对域map域map, reduceyureduce的排序compareTo就管不着了, 虽然
+
+这中情况不长出现, 但是确实存在这种问题的, 而且确实使用场景, 比如说全排序
+
+3全排序
+这里需要关注Partition这个阶段, Partition阶段是针对每个Reduce, 需要创建一个分区, 然后吧map的输出结果映射到特定的跟去中, 这个分区中可能会有N个Key对应的数据名但是一个Key的所有数据只能在一个分区中. 在实现全排序的过程中, 如果只有一个reduce, 也就是只有一个Partition, 那么所有的Map的输出都会经过一个Partition到一个Reduce里, 再一个Reduce里可以根据CompareTo(也可以采用其他比较算法)来排序. 但是这种情况就让MapReduce失去了分布式计算的光环.
+所以全排序的大概思路为: 确保Partition之间是有序的就OK了, 既保证Partition1的最大值小于Partition2的最小值就OK了,即便这样做也还是有问题的: Partition的分布不均, 可能导致某些Partition处理的数据量远大于其他Partition处理的数据量. 而实现全排序的核心步骤为: 取样和Partition.
+
+先"取样", 保证Partition得更均匀;
+
+1. 对Math.min(10, splits, length)个split(输入分片进行随机抽样, 对每个split取10000)个样, 总共10忘个样
+2. 10万个样排序, 根据reducer的数量(n), 取出间隔平均的n-1个样
+3. 将这个n-1个样写入partitionFile(_partition.lst, 这是一个SequenceFile), key是取得样, 值是nullValue
+4. 将partitionFilexie入DistributedCache
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
