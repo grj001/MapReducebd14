@@ -71,7 +71,8 @@ public class UserIpLoginTimesTopN {
 
 	public static class UserIpLoginTimesTopNReduce extends Reducer<
 
-			Text, IntWritable, Text, IntWritable> {
+			Text, IntWritable, 
+			Text, IntWritable> {
 
 		// 建立treeMap进行排序
 		private TreeMap<Integer, String> topN;
@@ -89,7 +90,9 @@ public class UserIpLoginTimesTopN {
 
 				Reducer<
 
-						Text, IntWritable, Text, IntWritable>.Context context)
+						Text, IntWritable, 
+						Text, IntWritable>.Context context)
+		
 				throws IOException, InterruptedException {
 
 			// reduce类只有一个? , 但是reduce()方法运行的此次数对应分区个数
