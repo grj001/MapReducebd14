@@ -168,7 +168,7 @@ public class SecondarySort {
 		job.setOutputValueClass(Text.class);
 		
 		Path inputPath = new Path("/user/secondaryorder");
-		Path outputDir = new Path("/SecondarySort");
+		Path outputDir = new Path("/output/SecondarySort");
 		
 		outputDir.getFileSystem(conf).delete(outputDir,true);
 		

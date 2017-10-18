@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 
@@ -22,12 +23,29 @@ public class WordCountTopN {
 		private final IntWritable ONE = new IntWritable(1);
 		private Text outKey = new Text();
 		private String[] infos;
+		
+		
+		
+		@Override
+		protected void setup(Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+			String filePath = "";
+			FileSplit fileSplit = new FileSplit();
+			
+			fileSplit = (FileSplit) context.getInputSplit();
+			filePath = fileSplit.getPath().toString();
+			
+			System.out.println("fileSplit:"+fileSplit+"\tfilePath:"+filePath);
+		}
+
+
+
 		//每进一次方法, 是一行的数据
 		@Override
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** map 方法-------------------------");
-			System.out.println("map输入一行:\tLongWritable:("+key+")\tText:("+value+")");
+			//System.out.println("** map 方法-------------------------");
+			//System.out.println("map输入一行:\tLongWritable:("+key+")\tText:("+value+")");
 			//map输入一行的信息
 			//按空格进行分割
 			infos = value.toString().split("\\s");
@@ -39,7 +57,7 @@ public class WordCountTopN {
 					outKey.set(word);
 					//输出一个单词, 循环后输出,一行的每一个单词 ,对应的值是1, 用于以后的计数
 					context.write(outKey, ONE);
-					System.out.println("map输出单词:\tword:("+outKey+")\t字数:("+ONE+")");
+					//System.out.println("map输出单词:\tword:("+outKey+")\t字数:("+ONE+")");
 				}
 			}
 		}
@@ -57,14 +75,14 @@ public class WordCountTopN {
 		@Override
 		protected void reduce(Text key, Iterable<IntWritable> values, Reducer<Text, IntWritable, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** combinner 方法-------------------------");
-			System.out.println("Combinner进行输入同一个键值:\t"+key);
+			//System.out.println("** combinner 方法-------------------------");
+			//System.out.println("Combinner进行输入同一个键值:\t"+key);
 			sum = 0;
 			for(IntWritable value : values){
-				System.out.println("不同的value:\t"+ value);
+				//System.out.println("不同的value:\t"+ value);
 				sum += value.get();
 			}
-			System.out.println("单词出现的次数进行统计得sum:\t"+sum);
+			//System.out.println("单词出现的次数进行统计得sum:\t"+sum);
 			//把计算结果放入topN, 如果topN中不满N个元素的画可直接往里面放, 然后还得
 			//先看topN中有没有相同的key, 如果有的话,
 			//batopN中相同的key对应的value和单词串在一起,如果没有的画直接放进去
@@ -101,7 +119,7 @@ public class WordCountTopN {
 					outKey.set(topN.get(key));
 					outValue.set(key);
 					context.write(outKey, outValue);
-					System.out.println("Combinner输出:\t单词:("+outKey+")\t出现次数:\t("+outValue+")");
+					//System.out.println("Combinner输出:\t单词:("+outKey+")\t出现次数:\t("+outValue+")");
 				}
 			}
 		}
@@ -122,14 +140,14 @@ public class WordCountTopN {
 		@Override
 		protected void reduce(Text key, Iterable<IntWritable> values, Reducer<Text, IntWritable, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** reduce 方法-------------------------");
-			System.out.println("reducer进行输入同一个键值, 拼接后的单词:\t"+key);
+			//System.out.println("** reduce 方法-------------------------");
+			//System.out.println("reducer进行输入同一个键值, 拼接后的单词:\t"+key);
 			sum = 0;
 			for(IntWritable value : values){
-				System.out.println("不同的单词出现次数value:\t"+ value);
+				//System.out.println("不同的单词出现次数value:\t"+ value);
 				sum += value.get();
 			}
-			System.out.println("单词出现的次数进行统计得sum:\t"+sum);
+			//System.out.println("单词出现的次数进行统计得sum:\t"+sum);
 			//把计算结果放入topN, 如果topN中不满N个元素的画可直接往里面放, 然后还得
 			//先看topN中有没有相同的key, 如果有的话,
 			//batopN中相同的key对应的value和单词串在一起,如果没有的画直接放进去
@@ -166,7 +184,7 @@ public class WordCountTopN {
 					outKey.set(topN.get(key));
 					outValue.set(key);
 					context.write(outKey, outValue);
-					System.out.println("Reudcer,拼接统计后输出:\t单词串:("+outKey+")\t出现次数:\t("+outValue+")");
+					//System.out.println("Reudcer,拼接统计后输出:\t单词串:("+outKey+")\t出现次数:\t("+outValue+")");
 				}
 			}
 		}
