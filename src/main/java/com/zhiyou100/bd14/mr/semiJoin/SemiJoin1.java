@@ -22,40 +22,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class SemiJoin1 {
 
-	//ValueWithFlag
-	public static class ValueWithFlag implements Writable{
-		private String value;
-		private String flag;
-		public String getValue() {
-			return value;
-		}
-		public void setValue(String value) {
-			this.value = value;
-		}
-		public String getFlag() {
-			return flag;
-		}
-		public void setFlag(String flag) {
-			this.flag = flag;
-		}
-		
-		@Override
-		public void write(DataOutput out) throws IOException {
-			out.writeUTF(value);
-			out.writeUTF(flag);
-		}
-		@Override
-		public void readFields(DataInput in) throws IOException {
-			this.value = in.readUTF();
-			this.flag = in.readUTF();
-		}
-		@Override
-		public String toString() {
-			return value + "\t" + flag;
-		}
-	}
-	
-	
 	// ReduceJoinMap
 	public static class SemiJoin1Map extends Mapper<LongWritable, Text, Text, NullWritable> {
 		private String[] infos;
@@ -98,7 +64,7 @@ public class SemiJoin1 {
 		job.setOutputValueClass(NullWritable.class);
 
 		FileInputFormat.addInputPath(job, new Path("/user/user_info.txt"));
-		Path outputDir = new Path("/user/output/SemiJoin1");
+		Path outputDir = new Path("/user/output/SemiJoin1/userName.txt");
 		outputDir.getFileSystem(conf).delete(outputDir, true);
 		FileOutputFormat.setOutputPath(job, outputDir);
 
