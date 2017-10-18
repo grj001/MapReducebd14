@@ -64,7 +64,7 @@ public class SemiJoin1 {
 		job.setOutputValueClass(NullWritable.class);
 
 		FileInputFormat.addInputPath(job, new Path("/user/user_info.txt"));
-		Path outputDir = new Path("/user/output/SemiJoin1/userName.txt");
+		Path outputDir = new Path("/user/output/SemiJoin1");
 		outputDir.getFileSystem(conf).delete(outputDir, true);
 		FileOutputFormat.setOutputPath(job, outputDir);
 

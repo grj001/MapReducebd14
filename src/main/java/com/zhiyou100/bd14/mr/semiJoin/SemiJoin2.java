@@ -1,12 +1,18 @@
 package com.zhiyou100.bd14.mr.semiJoin;
 
+import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -62,17 +68,82 @@ public class SemiJoin2 {
 	}
 
 	// ReduceJoinMap
-	public static class ReduceJoinMap extends Mapper<LongWritable, Text, Text, ValueWithFlag> {
+	public static class SemiJoin2Map extends Mapper<LongWritable, Text, Text, ValueWithFlag> {
 		private FileSplit inputSplit;
 		private String fileName;
 		private String[] infos;
 		private Text outKey = new Text();
 		private ValueWithFlag outValue = new ValueWithFlag();
-
+		
+		
+		private HashMap<String, String> userInfos = new HashMap<String, String>();
+		
+		
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, ValueWithFlag>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** 进入Map Setop()方法");
+			
+			
+			
+			
+			URI[] cacheFiles = context.getCacheFiles();
+			//获取文件管理系统
+			FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+			//遍历uri
+			
+			
+			for(URI uri : cacheFiles){
+				
+				//如果uri, 包含user_infos.txt, 是这个文件的话
+				if(uri.toString().contains("part-r-00000")){
+					FSDataInputStream inputStream = fileSystem.open(new Path(uri));
+					InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+					BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+					
+					//line已经是一行记录, 用户名
+					//将用户名放入userInfos
+					String line = bufferedReader.readLine();
+					
+					
+					while(line != null){
+						
+						userInfos.put(line, ""); 
+						
+						
+						line = bufferedReader.readLine(); //再读一行
+						
+					}
+				}
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			inputSplit = (FileSplit) context.getInputSplit();
 			if (inputSplit.getPath().toString().contains("user-logs-large.txt")) {
 				fileName = "userLogsLarge";
@@ -86,24 +157,30 @@ public class SemiJoin2 {
 		protected void map(LongWritable key, Text value,
 				Mapper<LongWritable, Text, Text, ValueWithFlag>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** 进入Map map()方法:\t输入为:\t" + key + "---" + value);
+			
 			outValue.setFlag(fileName);
+			
 			infos = value.toString().split("\\s");
-			if (fileName.equals("userLogsLarge")) {
-				outKey.set(infos[0]);
-				outValue.setValue(infos[1] + "\t" + infos[2]);
-			} else if (fileName.equals("userinfo")) {
-				outKey.set(infos[0]); // 0:mike 1:man 2:henan
-				outValue.setValue(infos[1] + "\t" + infos[2]); // 0:mike 1:man
-																// 2:henan
+			
+			if(userInfos.containsKey(infos[0])){
+				if (fileName.equals("userLogsLarge")) {
+					outKey.set(infos[0]);
+					outValue.setValue(infos[1] + "\t" + infos[2]);
+				} else if (fileName.equals("userinfo")) {
+					outKey.set(infos[0]); // 0:mike 1:man 2:henan
+					outValue.setValue(infos[1] + "\t" + infos[2]); // 0:mike 1:man
+																	// 2:henan
+				}
 			}
+			
+			
 			context.write(outKey, outValue);
-			System.out.println("** 即将退出Map map()方法:\t输出为:\t" + outKey.toString() + "---" + outValue);
+			
 		}
 	}
 
 	// ReduceJoinReduce
-	public static class ReduceJoinReduce extends Reducer<Text, ValueWithFlag, Text, Text> {
+	public static class SemiJoin2Reduce extends Reducer<Text, ValueWithFlag, Text, Text> {
 		private List<String> userLogsLargeList;
 		private List<String> userInfoList;
 		private Text outValue = new Text();
@@ -138,8 +215,8 @@ public class SemiJoin2 {
 		Job job = Job.getInstance(conf, "reduce端关联");
 		job.setJarByClass(ReduceJoin.class);
 
-		job.setMapperClass(ReduceJoinMap.class);
-		job.setReducerClass(ReduceJoinReduce.class);
+		job.setMapperClass(SemiJoin2Map.class);
+		job.setReducerClass(SemiJoin2Reduce.class);
 
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(ValueWithFlag.class);
@@ -147,6 +224,9 @@ public class SemiJoin2 {
 		job.setOutputValueClass(Text.class);
 
 		
+		//设置分布式缓存文件(小表)
+		Path cacheFilePath = new Path("/user/output/SemiJoin1/part-r-00000");
+		job.addCacheFile(cacheFilePath.toUri());
 		
 		
 		FileInputFormat.addInputPath(job, new Path("/user/user_info.txt"));
