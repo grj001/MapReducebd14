@@ -80,6 +80,12 @@ public class SecondarySort {
 				return this.firstField.compareTo(o.firstField);
 			}
 		}
+		@Override
+		public String toString() {
+			return "TwoFields [firstField=" + firstField + ", secondField=" + secondField + "]";
+		}
+		
+		
 	}
 	
 	
@@ -103,6 +109,7 @@ public class SecondarySort {
 		@Override
 		protected void map(Text key, Text value, Mapper<Text, Text, TwoFields, NullWritable>.Context context)
 				throws IOException, InterruptedException {
+			
 			TwoFields twoFields = new TwoFields();
 			twoFields.setFirstField(key.toString());
 			twoFields.setSecondField(Integer.valueOf(value.toString()));
@@ -119,7 +126,9 @@ public class SecondarySort {
 		@Override
 		protected void reduce(TwoFields key, Iterable<NullWritable> values,
 				Reducer<TwoFields, NullWritable, Text, Text>.Context context) throws IOException, InterruptedException {
+			
 			for(NullWritable value : values){
+				
 				oKey.set(key.firstField);
 				oValue.set(String.valueOf(key.secondField));
 				context.write(oKey, oValue);
@@ -168,7 +177,7 @@ public class SecondarySort {
 		job.setOutputValueClass(Text.class);
 		
 		Path inputPath = new Path("/user/secondaryorder");
-		Path outputDir = new Path("/output/SecondarySort");
+		Path outputDir = new Path("/user/output/SecondarySort");
 		
 		outputDir.getFileSystem(conf).delete(outputDir,true);
 		
