@@ -1,4 +1,4 @@
-package com.zhiyou100.bd14.mr;
+package com.zhiyou100.bd14.mr.wordCount;
 
 import java.io.IOException;
 import java.util.Set;

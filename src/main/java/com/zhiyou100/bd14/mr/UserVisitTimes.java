@@ -117,6 +117,8 @@ public class UserVisitTimes {
 		//得到hdfs文件管理系统, 进行递归删除, 先进行删除
 		outputPath.getFileSystem(conf).delete(outputPath,true);
 		
+		
+		//设置输出格式
 		job.setOutputFormatClass(SequenceFileOutputFormat.class);
 		
 		

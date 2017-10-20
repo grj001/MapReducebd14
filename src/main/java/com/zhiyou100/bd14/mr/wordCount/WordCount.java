@@ -1,4 +1,4 @@
-package com.zhiyou100.bd14.mr;
+package com.zhiyou100.bd14.mr.wordCount;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -22,7 +23,8 @@ public class WordCount {
 		private String[] infos;
 		private Text oKey = new Text();
 		private final IntWritable oValue = new IntWritable(1);
-
+		
+		
 		//读取文件
 		@Override
 		protected void map(
@@ -34,15 +36,12 @@ public class WordCount {
 			//解析一行数据, 转换成一个单词组成的数据
 			infos = value.toString().split("\\s");
 			
-			//System.out.println(Arrays.toString(infos));
-			
 			for (String i : infos) {
 				//把单词形成的一个kv对发送给reducer(单词,1)
 				oKey.set(i);
 				//向reduce中输入每一行的一个单词, 和null
 				context.write(oKey, oValue);
 				
-				//System.out.println(oValue.toString());
 			}
 		}
 	}
@@ -51,6 +50,9 @@ public class WordCount {
 	public static class WordCountReducer extends Reducer< Text, IntWritable, Text, IntWritable>{
 		private int sum;
 		private IntWritable oValue = new IntWritable(0);
+		
+		private int keyValuesNumber = 0;
+		
 		@Override
 		protected void reduce(
 				Text key, 
@@ -58,20 +60,18 @@ public class WordCount {
 				Reducer<Text, IntWritable, Text, IntWritable>.Context content
 				) throws IOException, InterruptedException {
 			sum = 0;
+			keyValuesNumber = 0;
 			for(IntWritable value : values){
-				
-				//System.out.println(key.toString());
-				
-				//value = 1
-				//System.out.println(value.toString());
-				
+				keyValuesNumber ++;
 				sum += value.get();
 			}
+			
+			//数据倾斜
+			System.out.println("key:\t"+key+"\t,kv对数量:\t"+keyValuesNumber);
+			
 			//输出kv
 			oValue.set(sum);
 			content.write(key, oValue);
-			
-			System.out.println(key);
 			
 		}
 	}
@@ -92,8 +92,6 @@ public class WordCount {
 		
 		//向job中指定job的Map的output key和value 类型, 如果和最终输出的kv对, 类型不同时
 		//需要特殊指定
-//		job.setMapOutputKeyClass(Text.class);
-//		job.setMapOutputValueClass(IntWritable.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 		
@@ -102,7 +100,28 @@ public class WordCount {
 		//向map-reduce job中添加inputPath
 		FileInputFormat.addInputPath(job, inputPath);
 		
-		Path outputPath = new Path("/dirFromJava");
+		
+		//设置压缩, 默认defalut
+		//map输入GzipCodec
+		//reduce输出IOCodec
+		//mapreduce可以直接读GzipCodec文件
+		FileOutputFormat.setCompressOutput(
+				job, true);
+		FileOutputFormat.setOutputCompressorClass(
+				job, GzipCodec.class);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		Path outputPath = new Path("/user/output/WordCount");
 		//通过Path可以, 得到hdfs文件管理系统, 进行递归删除, 先进行删除
 		outputPath.getFileSystem(configuration).delete(outputPath,true);
 		//向map-reduce job中添加outputPath
@@ -112,73 +131,5 @@ public class WordCount {
 		boolean result = job.waitForCompletion(true);
 		System.exit(result ? 0 : 1);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 }
