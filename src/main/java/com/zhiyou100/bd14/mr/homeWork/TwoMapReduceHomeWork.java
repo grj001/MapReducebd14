@@ -19,6 +19,7 @@ public class TwoMapReduceHomeWork {
 
 	public static int num;
 	
+	
 	/*
 	 * 1. 读取文件, 
 	 * 2. 对文件进行分解, 
