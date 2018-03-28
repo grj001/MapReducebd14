@@ -39,7 +39,7 @@ public class MRChain {
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
 			//读取文件的一行的数据:	商品名称	价格
-			System.out.println("读取文件"+path+"的一行数据"+value);
+			System.out.println("读取文件"+path+"的一行数�?"+value);
 			infos = value.toString().split("\\s");
 			if(Integer.valueOf(infos[1]) <= 100000000){
 				outKey.set(infos[0]);
@@ -50,7 +50,7 @@ public class MRChain {
 	}
 
 
-	//过滤掉数量在100-100000之间的数据
+	//过滤掉数量在100-100000之间的数�?
 	public static class MRChainMap2 extends Mapper<Text, IntWritable, Text, IntWritable>{
 		@Override
 		protected void map(Text key, IntWritable value, Mapper<Text, IntWritable, Text, IntWritable>.Context context)
@@ -62,7 +62,7 @@ public class MRChain {
 	}
 
 	
-	//聚合商品总数量
+	//聚合商品总数�?
 	public static class MRChainReduce extends Reducer<Text, IntWritable, Text, IntWritable>{
 		private int sum;
 		private IntWritable outValue = new IntWritable();
@@ -78,7 +78,7 @@ public class MRChain {
 		}
 	}
 	
-	//商品名称大于三的过滤掉
+	//商品名称大于三的过滤�?
 	public static class MRChainMap3 extends Mapper<Text, IntWritable, Text, IntWritable>{
 		@Override
 		protected void map(Text key, IntWritable value, Mapper<Text, IntWritable, Text, IntWritable>.Context context)
@@ -95,14 +95,14 @@ public class MRChain {
 		job.setJarByClass(DesDumolicateMap.class);
 		job.setJobName("chain mapper");
 		
-		//设置map端执行
+		//设置map端执�?
 		ChainMapper.addMapper(job, MRChainMap1.class, LongWritable.class, 
 				Text.class, Text.class, IntWritable.class, conf);
 		ChainMapper.addMapper(job, MRChainMap1.class, 
 				Text.class, IntWritable.class, 
 				Text.class, IntWritable.class, conf);
 		
-		//设置reduce端执行
+		//设置reduce端执�?
 		ChainReducer.setReducer(job, MRChainReduce.class, 
 				Text.class, IntWritable.class, 
 				Text.class, IntWritable.class, conf);
@@ -116,7 +116,7 @@ public class MRChain {
 		
 		//设置输出数据(目录不能相同)
 		Path outputPath = new Path("/bd14/data");
-		//得到hdfs文件管理系统, 进行递归删除, 先进行删除
+		//得到hdfs文件管理系统, 进行递归删除, 先进行删�?
 		outputPath.getFileSystem(conf).delete(outputPath,true);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		

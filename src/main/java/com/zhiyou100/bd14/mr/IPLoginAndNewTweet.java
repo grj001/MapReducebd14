@@ -65,7 +65,7 @@ public class IPLoginAndNewTweet {
 			}
 			
 			oKey.set(key);
-			//设置对象
+			
 			oValue.setLoginTimes(loginTimes);
 			oValue.setTweetTimes(tweetTimes);
 			context.write(oKey, oValue);
@@ -99,11 +99,8 @@ public class IPLoginAndNewTweet {
 		outputDir.getFileSystem(conf).delete(outputDir,true);
 		
 		
-		
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputDir);
-		
-		
 		
 		System.exit(job.waitForCompletion(true)?0:1);
 	}

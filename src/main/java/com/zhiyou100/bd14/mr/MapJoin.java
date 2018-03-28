@@ -19,9 +19,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import com.zhiyou100.bd14.mr.ReduceJoin.ReduceJoinMap;
-import com.zhiyou100.bd14.mr.ReduceJoin.ReduceJoinReduce;
-import com.zhiyou100.bd14.mr.ReduceJoin.ValueWithFlag;
 
 public class MapJoin {
 
@@ -120,11 +117,11 @@ public class MapJoin {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 		
-		//设置分布式缓存文件(小表)
+		//distribute file to memory, small table
 		Path cacheFilePath = new Path("/user/user_info.txt");
 		job.addCacheFile(cacheFilePath.toUri());
 		
-		//大表
+		//big table
 		FileInputFormat.addInputPath(job, new Path("/user/user-logs-large.txt"));
 		Path outputDir = new Path("/user/output/MapJoin");
 		outputDir.getFileSystem(conf).delete(outputDir,true);

@@ -80,7 +80,7 @@ public class ReduceJoin {
 		protected void map(LongWritable key, Text value,
 				Mapper<LongWritable, Text, Text, ValueWithFlag>.Context context)
 				throws IOException, InterruptedException {
-			System.out.println("** 进入Map map()方法:\t输入为:\t"+key+"---"+value);
+			
 			outValue.setFlag(fileName);
 			infos = value.toString().split("\\s");
 			if(fileName.equals("userLogsLarge")){
